@@ -104,7 +104,7 @@ defmodule HangmanLiveWeb.PageLive do
   def handle_event("keyup", %{"key" => key}, socket) when (key >= "A" and key <= "Z") and byte_size(key) == 1 do
     play_game String.downcase(key), socket
   end
-  def handle_event("keyup", %{"key" => key}, socket) do
+  def handle_event("keyup", _, socket) do
     {:noreply, socket}
   end
 
