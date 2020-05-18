@@ -1,12 +1,13 @@
 # HangmanLive
 
-A LiveView frontend on the Evil Hangman game. This is the classic hangman game
-with a twist. The word selected isn't chosen until the last moment possible.
-There is a word dictionary with approximately 120,000 words. After each
-letter guess is made, (and the word length during the game setup) the list of
-possible outcomes is chosen such that the largest number of words remain.
-If the word isn't guessed in the allotted number of guesses, a random word
-is selected from the remaining list of possible solutions.
+A LiveView frontend on the Evil Hangman game. (https://github.com/mfoley40/hangman)
+This is the classic hangman game with a twist. The word selected isn't
+chosen until the last moment possible. There is a word dictionary with
+approximately 120,000 words. After each letter guess is made,
+(and the word length during the game setup) the list of possible
+outcomes is chosen such that the largest number of words remain. If the
+word isn't guessed in the allotted number of guesses, a random word is
+selected from the remaining list of possible solutions.
 
 # NOTES:
 This project was implemented as an educational program to help learn
