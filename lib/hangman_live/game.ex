@@ -62,6 +62,7 @@ defmodule Game do
   use GenServer
   require Logger
 
+  @no_word_length [23, 25, 26, 27]
 
    #<editor-fold desc='Module State'>
    defmodule State do
@@ -143,30 +144,38 @@ defmodule Game do
         raise ArgumentError, message: ":dictionary_file paramater not provided"
       end
 
-      word_length = Keyword.get args, :word_length, nil
-       if word_length == nil do
-         raise ArgumentError, message: ":word_length paramater not provided"
-       end
-
-       number_of_guesses = Keyword.get args, :number_of_guesses, nil
-        if number_of_guesses == nil do
-          raise ArgumentError, message: ":number_of_guesses paramater not provided"
-        end
-
-     words = case File.read(dictionary_file) do
-       {:ok, body}      -> match_words(body, word_length)
-       {:error, reason} -> Logger.error "Couldn't read file: #{reason}"
-                           []
+    word_length = Keyword.get args, :word_length, nil
+     if word_length == nil do
+       raise ArgumentError, message: ":word_length paramater not provided"
      end
 
-     Logger.debug "#{__MODULE__} length: #{word_length} guesses: #{number_of_guesses}"
+     #
+     # REVIEW: Pretty bad solution for hanling when a lengh for which
+     #         there aren't any words given. Throw error instead?
+     #
+     word_length = if word_length in @no_word_length do
+       24
+     else
+       word_length
+     end
+
+     number_of_guesses = Keyword.get args, :number_of_guesses, nil
+      if number_of_guesses == nil do
+        raise ArgumentError, message: ":number_of_guesses paramater not provided"
+      end
+
+     words = HangmanLive.Word.words_of_length word_length
+     words = if length(words) == 0 do
+       HangmanLive.Word.reset_used word_length
+       HangmanLive.Word.words_of_length word_length
+     else
+       words
+     end
 
      pattern = Enum.reduce(1..word_length, "", fn(_x, acc) ->
        acc <> "- "
      end)
      |> String.trim
-
-     Logger.debug "#{__MODULE__} pattern: #{pattern}"
 
     #
     # Register to get a terminate callback when shutting down
@@ -290,7 +299,8 @@ defmodule Game do
     #
     rand = :random.uniform(length(words)) - 1
     word = Enum.at(words, rand)
-    # Logger.info "rand: #{rand}"
+
+    HangmanLive.Word.mark_as_used word
 
     {:reply, word, state}
   end
@@ -303,6 +313,14 @@ defmodule Game do
       state
     else
       process_guess guess, state
+    end
+
+    unless updated_state.pattern =~ "-" do
+      #
+      # Game was won, mark word as used.
+      #
+      word = String.replace updated_state.pattern, " ", ""
+      HangmanLive.Word.mark_as_used word
     end
 
     #
@@ -325,7 +343,7 @@ defmodule Game do
   defp process_guess guess, %{words: words, pattern: pattern, guesses: guesses, guessed: guessed} = state do
     #
     # Add the guess to the list of guessed words.
-    # NOTE: The list if formatted for output here, but that probably should be
+    # NOTE: The list is formatted for output here, but that probably should be
     #       done in a client, or getter function, and only have the list of
     #       guessed letters be that.
     updated_guessed = case length(guessed) do
@@ -377,22 +395,6 @@ defmodule Game do
         nil -> Map.put(acc, word_pattern, [x])
         v -> Map.put(acc, word_pattern, [x] ++ v)
       end
-    end)
-  end
-
-  #
-  # Filter words in the given list of words, contents, which are
-  # of the given length.
-  #
-  # Return the filtered list containing all the words in contents
-  # of the given length.
-  #
-  defp match_words contents, length do
-    words = contents
-    |> String.split("\n", trim: true)
-
-    Enum.filter(words, fn(x) ->
-      String.length(x) == length
     end)
   end
 

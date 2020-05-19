@@ -4,7 +4,7 @@ defmodule HangmanLive.MixProject do
   def project do
     [
       app: :hangman_live,
-      version: "0.1.0",
+      version: "1.1.0",
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -20,7 +20,7 @@ defmodule HangmanLive.MixProject do
   def application do
     [
       mod: {HangmanLive.Application, []},
-      extra_applications: [:logger, :phoenix_ecto, :runtime_tools]
+      extra_applications: [:logger, :phoenix_ecto, :postgrex, :runtime_tools]
     ]
   end
 
@@ -39,7 +39,8 @@ defmodule HangmanLive.MixProject do
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_dashboard, "~> 0.2.0"},
-      {:ecto, "~> 3.4"},
+      {:postgrex, ">= 0.15.0"},
+      {:ecto_sql, "~> 3.4"},
       {:phoenix_ecto, "~> 4.0"},
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},

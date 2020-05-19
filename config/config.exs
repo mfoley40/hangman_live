@@ -7,6 +7,16 @@
 # General application configuration
 use Mix.Config
 
+config :hangman_live,
+  ecto_repos: [HangmanLive.Repo]
+#  hangman_live_repos: [HangmangLive.Repo],
+
+config :hangman_live, HangmanLive.Repo,
+  database: "hangman_live_repo",
+  username: "db_user",
+  password: "db_password",
+  hostname: "localhost"
+
 # Configures the endpoint
 config :hangman_live, HangmanLiveWeb.Endpoint,
   url: [host: "localhost"],
