@@ -17,12 +17,6 @@ which is set to true after a word is used. Thus words are not repeated
 until after all the words of a given length have been used. Then the flag
 for words of that length is reset and the process starts over.
 
-# Next Steps
-Currently the game is shared amongst all browsers pointing at the site.
-For a game, there should be a new instance for each browser. Not too
-important when running a single instance on a PC, but to make this a more
-realistic solution, that will be updated.
-
 # NOTES:
 This project was implemented as an educational program to help learn
 Phoenix LiveView, Ecto and their tools. Currently there aren't any tests.
