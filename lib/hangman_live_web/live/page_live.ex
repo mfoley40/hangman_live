@@ -54,9 +54,7 @@ defmodule HangmanLiveWeb.PageLive do
       length = String.to_integer(Map.get(params, "length"))
       guesses = String.to_integer(Map.get(params, "guesses"))
 
-      dictionary_file = Path.join(:code.priv_dir(:hangman_live), "static/dictionary.txt")
-      Game.Supervisor.start [dictionary_file: dictionary_file,
-                            word_length: length,
+      Game.Supervisor.start [word_length: length,
                             number_of_guesses: guesses]
 
       guessed = case Game.guessed do

@@ -124,8 +124,6 @@ defmodule Game do
   The args passed to the function is a Keyword list with the
   game's configuration settings. The dictionary must contain:
 
-      :dictionary_file    The name of the file containing the word list,
-                          one word per line in the text file
       :word_length        The length of the word to be guessed
       :number_of_guesses  The number of guesses which are allowed before
                           the game is lost.
@@ -138,11 +136,6 @@ defmodule Game do
   def init(argument_dictionary)
   def init(args) do
      #Logger.info "#{__MODULE__} Initing args: #{inspect args}"
-
-     dictionary_file = Keyword.get args, :dictionary_file, nil
-      if dictionary_file == nil do
-        raise ArgumentError, message: ":dictionary_file paramater not provided"
-      end
 
     word_length = Keyword.get args, :word_length, nil
      if word_length == nil do
