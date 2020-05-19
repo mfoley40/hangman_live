@@ -23,6 +23,7 @@ defmodule Game.Supervisor do
     #Logger.info "#{__MODULE__} start args: #{inspect args}"
     case Supervisor.start_child(@name, [args]) do
       {:ok, pid} -> Logger.info("#{__MODULE__} pid: #{inspect pid}")
+                    pid
       {:error, err} -> Logger.warn("#{__MODULE__} #{inspect err}")
       _ -> Logger.error("#{__MODULE__} What did start_child return?")
     end
@@ -33,6 +34,9 @@ defmodule Game.Supervisor do
   """
   def stop do
     pid = Process.whereis(:game)
+    Supervisor.terminate_child(@name, pid)
+  end
+  def stop pid do
     Supervisor.terminate_child(@name, pid)
   end
 
@@ -88,7 +92,7 @@ defmodule Game do
 
 
   def start(args \\ []) do
-    #Logger.info "#{__MODULE__} start args: #{inspect args}"
+    Logger.debug "#{__MODULE__} start args: #{inspect args}"
     id = Keyword.get args, :id, :game
     GenServer.start __MODULE__, args, [name: id]
   end
@@ -135,7 +139,7 @@ defmodule Game do
   @impl true
   def init(argument_dictionary)
   def init(args) do
-     #Logger.info "#{__MODULE__} Initing args: #{inspect args}"
+     Logger.debug "#{__MODULE__} Initing args: #{inspect args}"
 
     word_length = Keyword.get args, :word_length, nil
      if word_length == nil do

@@ -25,8 +25,6 @@ defmodule HangmanLiveWeb.PageLive do
   @doc since: "1.0.0"
   @impl true
   def handle_event("validate", %{"game_parameters" => params}, socket) do
-    Logger.info "validate #{inspect params}"
-
     changeset = HangmanLive.GameParameters.changeset(%HangmanLive.GameParameters{}, params)
       |> Map.put(:action, :insert)
     {:noreply, socket
@@ -46,18 +44,24 @@ defmodule HangmanLiveWeb.PageLive do
   @doc since: "1.0.0"
   @impl true
   def handle_event("play", %{"game_parameters" => params}, socket) do
-
+    Logger.debug "#{__MODULE__} play params: #{inspect params}"
     changeset = HangmanLive.GameParameters.changeset(%HangmanLive.GameParameters{}, params)
       |> Map.put(:action, :insert)
 
     if changeset.valid? do
       length = String.to_integer(Map.get(params, "length"))
       guesses = String.to_integer(Map.get(params, "guesses"))
-
-      Game.Supervisor.start [word_length: length,
+      Logger.debug "#{__MODULE__} length: #{length}"
+      Logger.debug "#{__MODULE__} guesses: #{guesses}"
+      alphabet = Enum.to_list(?a..?z) ++ Enum.to_list(?0..?9)
+      id_length = 12
+      id = for _ <- 1..id_length, into: "", do: << Enum.random(alphabet) >>
+      Logger.debug "#{__MODULE__} Game id: #{id}"
+      pid = Game.Supervisor.start [id: String.to_atom(id),
+                            word_length: length,
                             number_of_guesses: guesses]
-
-      guessed = case Game.guessed do
+      Logger.debug "#{__MODULE__} Game PID #{inspect pid}"
+      guessed = case Game.guessed pid do
         [] -> "none"
         g -> g
       end
@@ -66,10 +70,11 @@ defmodule HangmanLiveWeb.PageLive do
       {:noreply, socket
                     |> assign(title: "Make a Guess")
                     |> assign(playing: :true)
-                    |> assign(pattern: Game.pattern)
+                    |> assign(pattern: Game.pattern pid)
                     |> assign(guessed: guessed)
-                    |> assign(remaining: Game.guesses_remaining)
-                    |> assign(word_count: Game.word_count)}
+                    |> assign(remaining: Game.guesses_remaining pid)
+                    |> assign(word_count: Game.word_count pid)
+                    |> assign(pid: pid)}
     else
       {:noreply, socket}
     end
@@ -81,11 +86,12 @@ defmodule HangmanLiveWeb.PageLive do
   @doc since: "1.0.0"
   @impl true
   def handle_event("restart", _, socket) do
-    Game.Supervisor.stop
+    Game.Supervisor.stop socket.assigns.pid
     changeset = HangmanLive.GameParameters.changeset(%HangmanLive.GameParameters{}, %{"length" => "5", "guesses" => "10"})
     {:noreply, socket
                   |> assign(playing: :false)
-                  |> assign(changeset: changeset)}
+                  |> assign(changeset: changeset)
+                  |> assign(pid: nil)}
   end
 
   @doc """
@@ -112,16 +118,17 @@ defmodule HangmanLiveWeb.PageLive do
   # Return any new assigns for the live view.
   #
   defp play_game key, socket do
-    if(0 < Game.guesses_remaining and Game.pattern =~ "-") do
-      Game.make_guess key
+    pid = socket.assigns.pid
+    if(0 < Game.guesses_remaining(pid) and Game.pattern(pid) =~ "-") do
+      Game.make_guess key, pid
 
       cond do
-        Game.guesses_remaining == 0 ->
-          {:noreply, assign(socket, title: "Game Over", pattern: Game.winning_word, guessed: Game.guessed, remaining: Game.guesses_remaining, word_count: Game.word_count)}
-        Game.pattern =~ "-" ->
-          {:noreply, assign(socket, pattern: Game.pattern, guessed: Game.guessed, remaining: Game.guesses_remaining, word_count: Game.word_count)}
+        Game.guesses_remaining(pid) == 0 ->
+          {:noreply, assign(socket, title: "Game Over", pattern: Game.winning_word(pid), guessed: Game.guessed(pid), remaining: Game.guesses_remaining(pid), word_count: Game.word_count(pid))}
+        Game.pattern(pid) =~ "-" ->
+          {:noreply, assign(socket, pattern: Game.pattern(pid), guessed: Game.guessed(pid), remaining: Game.guesses_remaining(pid), word_count: Game.word_count(pid))}
         :true ->
-          {:noreply, assign(socket, title: "You Win!", pattern: Game.pattern, guessed: Game.guessed, remaining: Game.guesses_remaining, word_count: Game.word_count)}
+          {:noreply, assign(socket, title: "You Win!", pattern: Game.pattern(pid), guessed: Game.guessed(pid), remaining: Game.guesses_remaining(pid), word_count: Game.word_count(pid))}
       end
     else
       {:noreply, socket}
